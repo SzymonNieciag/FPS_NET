@@ -21,6 +21,8 @@ AFPSobject::AFPSobject()
 	SphereCOmponent->SetupAttachment(MeshComponent);
 
 	//SphereCOmponent->OnComponentBeginOverlap.AddDynamic(this, &AFPSobject::OnOverlapBegin);
+
+	SetReplicates(true);
 }
 
 // Called when the game starts or when spawned
@@ -41,12 +43,14 @@ void AFPSobject::NotifyActorBeginOverlap(AActor * OtherActor)
 	Super::NotifyActorBeginOverlap(OtherActor);
 
 	PlayEffect();
-	UE_LOG(LogTemp, Warning, TEXT("Your message"));
-	auto *FPScharacter = Cast<AFPSCharacter>(OtherActor);
+	if (Role = ROLE_Authority) {
+		UE_LOG(LogTemp, Warning, TEXT("Your message"));
+		auto *FPScharacter = Cast<AFPSCharacter>(OtherActor);
 
-	if (FPScharacter)
-	{
-		FPScharacter->isCarryingObjective = true;
-		Destroy();
+		if (FPScharacter)
+		{
+			FPScharacter->isCarryingObjective = true;
+			Destroy();
+		}
 	}
 }

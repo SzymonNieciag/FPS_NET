@@ -5,6 +5,7 @@
 #include <DrawDebugHelpers.h>
 #include "FPSGameMode.h"
 #include <AI/Navigation/NavigationSystem.h>
+#include "Net/UnrealNetwork.h"
 
 
 // Sets default values
@@ -40,7 +41,6 @@ void AFPS_AI_Guardian::OnpawnSee(APawn *otherPawn)
 	if (otherPawn)
 	{
 		DrawDebugSphere(GetWorld(), otherPawn->GetActorLocation(), 32.0f, 12, FColor::Red, false, 10.0f);
-		SetGuardianState(EAIstate::Alerted);
 	}
 	AFPSGameMode *GM = Cast<AFPSGameMode>(GetWorld()->GetAuthGameMode());
 	if (GM)
@@ -54,7 +54,7 @@ void AFPS_AI_Guardian::OnpawnSee(APawn *otherPawn)
 		Controller->StopMovement();
 		CurrentpatrolPoint = NULL;
 	}
-
+	SetGuardianState(EAIstate::Alerted);
 }
 
 void AFPS_AI_Guardian::OnNoiseHeard(APawn * NoiseInstigator, const FVector & Location, float Volume)
@@ -87,6 +87,11 @@ void AFPS_AI_Guardian::OnNoiseHeard(APawn * NoiseInstigator, const FVector & Loc
 
 }
 
+void AFPS_AI_Guardian::OnRep_GuardState()
+{
+	OnStateChange(GuardianState);
+}
+
 void AFPS_AI_Guardian::SetGuardianState(EAIstate NewState)
 {
 	if (GuardianState == NewState)
@@ -94,9 +99,14 @@ void AFPS_AI_Guardian::SetGuardianState(EAIstate NewState)
 	else
 		GuardianState = NewState;
 
-	OnStateChange(NewState);
+	OnRep_GuardState();
 }
+void AFPS_AI_Guardian::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(AFPS_AI_Guardian, GuardianState);
+}
 void AFPS_AI_Guardian::ResetOrientation()
 {
 	if (GuardianState == EAIstate::Alerted)
